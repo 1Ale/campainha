@@ -1,0 +1,59 @@
+# Package de exemplo para Home Assistant
+# Coloque este arquivo em config/packages/ (ou inclua via packages: no configuration.yaml)
+
+# ---------------------------------------------------------
+# Entidades auxiliares
+# ---------------------------------------------------------
+
+input_text:
+  ultima_porta_chamada:
+    name: "Última porta que chamou"
+    max: 32
+    initial: "desconhecida"
+
+# ---------------------------------------------------------
+# Automação de exemplo: atualiza a porta conforme Caller ID
+# ---------------------------------------------------------
+
+automation:
+  - id: campainha_atualiza_caller_id
+    alias: "Campainha - Atualiza porta pelo Caller ID"
+    mode: single
+    trigger:
+      - platform: state
+        entity_id: text_sensor.caller_id   # ajuste o entity_id real
+    condition: []
+    action:
+      - service: input_text.set_value
+        target:
+          entity_id: input_text.ultima_porta_chamada
+        data:
+          value: "{{ trigger.to_state.state }}"
+      # TODO: aqui você pode também selecionar a câmera correta
+      # ou disparar notificação já com o feed adequado
+
+# ---------------------------------------------------------
+# HomeKit Bridge (exemplo)
+# ---------------------------------------------------------
+# Adicione no seu configuration.yaml ou em outro package:
+#
+# homekit:
+#   - name: "Campainha Bridge"
+#     port: 21064
+#     filter:
+#       include_entities:
+#         - binary_sensor.campainha_tocando
+#         - camera.interfone_atual          # câmera proxy
+#         - button.abrir_porta
+#     entity_config:
+#       camera.interfone_atual:
+#         name: "Interfone"
+#         linked_doorbell_sensor: binary_sensor.campainha_tocando
+
+# ---------------------------------------------------------
+# Notas
+# ---------------------------------------------------------
+# - Crie uma câmera proxy (template, ffmpeg, go2rtc, etc.) que mude
+#   a fonte de acordo com o valor de input_text.ultima_porta_chamada.
+# - O linked_doorbell_sensor é o que faz o Apple Home tratar o conjunto
+#   como uma campainha de vídeo única.

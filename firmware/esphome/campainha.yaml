@@ -1,0 +1,113 @@
+###############################################
+# Campainha - Firmware preliminar (ESPHome)
+# Baseado no esphome-intercom
+###############################################
+
+esphome:
+  name: campainha
+  friendly_name: Campainha Interfone
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: esp-idf
+
+# PSRAM é obrigatória para o stack de áudio full-duplex
+psram:
+  mode: octal
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  ap:
+    ssid: "Campainha Fallback"
+    password: "campainha123"
+
+captive_portal:
+
+# =========================================================
+# TODO: Incluir o package correto do esphome-intercom
+# Exemplo (verificar versão mais recente no repositório):
+#
+# external_components:
+#   - source: github://n-IA-hane/esphome-intercom
+#     components: [voip_stack, esp_audio_stack, ...]
+#
+# packages:
+#   intercom: github://n-IA-hane/esphome-intercom/packages/...
+# =========================================================
+
+# ---------------------------------------------------------
+# Hardware de linha (valores de GPIO são exemplos)
+# ---------------------------------------------------------
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO4          # TODO: ajustar pino do opto de ring
+      mode: INPUT_PULLUP
+      inverted: true
+    name: "Campainha Tocando"
+    id: ring_detect
+    device_class: occupancy
+    filters:
+      - delayed_on: 50ms
+      - delayed_off: 300ms
+    on_press:
+      - logger.log: "Ring detectado"
+      # TODO: acionar off-hook automaticamente ou via automação
+      # TODO: iniciar chamada no stack de intercom
+
+switch:
+  - platform: gpio
+    pin: GPIO5               # TODO: ajustar pino do SSR / MOSFET de off-hook
+    name: "Off-hook"
+    id: offhook
+    restore_mode: ALWAYS_OFF
+    # icon: mdi:phone-in-talk
+
+# ---------------------------------------------------------
+# Caller ID e abertura de porta (DTMF)
+# ---------------------------------------------------------
+
+text_sensor:
+  - platform: template
+    name: "Caller ID"
+    id: caller_id
+    # TODO: implementar decodificação DTMF real (software ou MT8870)
+
+button:
+  - platform: template
+    name: "Abrir Porta"
+    id: btn_abrir_porta
+    on_press:
+      - logger.log: "Comando de abertura de porta recebido"
+      # TODO: gerar a sequência DTMF correta da central
+      # Exemplo conceitual:
+      # - lambda: id(dtmf).send("**");
+
+# ---------------------------------------------------------
+# Áudio full-duplex
+# ---------------------------------------------------------
+# TODO: Configurar i2s_audio / codec de acordo com a placa usada
+# (AI-Thinker A1S, ES8311 + MAX98357, etc.)
+# A configuração definitiva deve vir do package do esphome-intercom.
+
+# ---------------------------------------------------------
+# Notas de desenvolvimento
+# ---------------------------------------------------------
+# 1. Primeiro valide apenas ring detect + off-hook (sem áudio).
+# 2. Depois adicione o hybrid de áudio e teste qualidade.
+# 3. Só então implemente DTMF (Caller ID + abertura).
+# 4. Por último integre o stack completo de voz.

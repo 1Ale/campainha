@@ -1,0 +1,30 @@
+# ESPHome
+.esphome/
+secrets.yaml
+*.bin
+*.elf
+
+# Home Assistant
+.storage/
+.cloud/
+.google.token
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# KiCad temporary files (futuro)
+*-backups/
+*.kicad_prl
+fp-info-cache
